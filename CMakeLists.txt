@@ -36,7 +36,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 find_package(Ceres REQUIRED)
 find_package(glog REQUIRED ${glog_DIR_HINT})
-find_package(Eigen3 REQUIRED)
 
 add_definitions("-D_DISABLE_EXTENDED_ALIGNED_STORAGE")
 
@@ -61,24 +60,21 @@ set(HEADER_FILES
     ProcrustesAligner.h 
     ICPOptimizer.h 
     FreeImageHelper.h
-    render.h
+    Render.h
     Volume.h
-    MarchingCubes.h
+    
 )
-
 set(SOURCE_FILES 
     FreeImageHelper.cpp
-    Volume.cpp
-    main.cpp
 )
 
 link_directories(${FreeImage_LIBRARY_DIR})
-add_executable(Kinect_Fusion ${HEADER_FILES} ${SOURCE_FILES})
+add_executable(Kinect_Fusion main.cpp ${HEADER_FILES} ${SOURCE_FILES})
 target_link_libraries(Kinect_Fusion ceres freeimage)
 target_include_directories(Kinect_Fusion PUBLIC ${Eigen3_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}  ${Ceres_INCLUDE_DIR} ${glog_INCLUDE_DIR} ${FreeImage_INCLUDE_DIR} ${Flann_INCLUDE_DIR})
 
 # # Visual Studio properties
-# set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT exercise_05)
+# set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Kinect_Fusion)
 # set_property(TARGET Kinect_Fusion PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/)
 
 # On Windows copy dll to executable folder

@@ -55,7 +55,7 @@ public:
 		m_colorFrame = new BYTE[4 * m_colorImageWidth * m_colorImageHeight];
 		for (unsigned int i = 0; i < 4 * m_colorImageWidth * m_colorImageHeight; ++i) m_colorFrame[i] = 255;
 
-
+		
 		m_currentIdx = -1;
 		return true;
 	}

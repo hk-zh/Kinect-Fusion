@@ -13,6 +13,18 @@ struct Vertex {
 	Vector4f position;
 	// Color stored as 4 unsigned char
 	Vector4uc color;
+	Vertex () {
+		position[0] = 0;
+		position[1] = 0;
+		position[2] = 0;
+		position[3] = 1;
+	}
+	Vertex(float a, float b, float c) {
+		position[0] = a;
+		position[1] = b;
+		position[2] = c;
+		position[3] = 1;
+	}
 };
 
 struct Triangle {

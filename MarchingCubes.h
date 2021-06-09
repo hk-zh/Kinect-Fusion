@@ -462,11 +462,10 @@ bool ProcessVolumeCell(Volume* vol, int x, int y, int z, double iso, SimpleMesh*
 		Vertex v2((float)tris[i1].p[2][0], (float)tris[i1].p[2][1], (float)tris[i1].p[2][2]);
 
 		unsigned int vhandle[3];
-		vhandle[0] = mesh->AddVertex(v0);
-		vhandle[1] = mesh->AddVertex(v1);
-		vhandle[2] = mesh->AddVertex(v2);
-
-		mesh->AddFace(vhandle[0], vhandle[1], vhandle[2]);
+		vhandle[0] = mesh->addVertex(v0);
+		vhandle[1] = mesh->addVertex(v1);
+		vhandle[2] = mesh->addVertex(v2);
+		mesh->addFace(vhandle[0], vhandle[1], vhandle[2]);
 	}
 
 	return true;
