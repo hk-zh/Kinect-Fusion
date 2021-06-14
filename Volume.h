@@ -4,27 +4,28 @@
 #define VOLUME_H
 
 #include <limits>
-#include "Eigen.h"
+#include "utils/Eigen.h"
 typedef unsigned int uint;
 
 //! A regular volume dataset
 class Volume
 {
 public:
-
 	//! Initializes an empty volume dataset.
 	Volume(Vector3d min_, Vector3d max_, uint dx_ = 10, uint dy_ = 10, uint dz_ = 10, uint dim = 1);
 
 	~Volume();
 
-	inline void computeMinMaxValues(double& minVal, double& maxVal) const
+	inline void computeMinMaxValues(double &minVal, double &maxVal) const
 	{
 		minVal = std::numeric_limits<double>::max();
 		maxVal = -minVal;
-		for (uint i1 = 0; i1 < dx*dy*dz; i1++)
+		for (uint i1 = 0; i1 < dx * dy * dz; i1++)
 		{
-			if (minVal > vol[i1]) minVal = vol[i1];
-			if (maxVal < vol[i1]) maxVal = vol[i1];
+			if (minVal > vol[i1])
+				minVal = vol[i1];
+			if (maxVal < vol[i1])
+				maxVal = vol[i1];
 		}
 	}
 
@@ -65,27 +66,27 @@ public:
 	};
 
 	//! Get the value at (pos.x, pos.y, pos.z).
-	inline double get(const Vector3i& pos_) const
+	inline double get(const Vector3i &pos_) const
 	{
-		return(get(pos_[0], pos_[1], pos_[2]));
+		return (get(pos_[0], pos_[1], pos_[2]));
 	}
 
 	//! Returns the cartesian x-coordinates of node (i,..).
 	inline double posX(int i) const
 	{
-		return min[0] + diag[0] * (double(i)*ddx);
+		return min[0] + diag[0] * (double(i) * ddx);
 	}
 
 	//! Returns the cartesian y-coordinates of node (..,i,..).
 	inline double posY(int i) const
 	{
-		return min[1] + diag[1] * (double(i)*ddy);
+		return min[1] + diag[1] * (double(i) * ddy);
 	}
 
 	//! Returns the cartesian z-coordinates of node (..,i).
 	inline double posZ(int i) const
 	{
-		return min[2] + diag[2] * (double(i)*ddz);
+		return min[2] + diag[2] * (double(i) * ddz);
 	}
 
 	//! Returns the cartesian coordinates of node (i,j,k).
@@ -93,15 +94,15 @@ public:
 	{
 		Vector3d coord(0, 0, 0);
 
-		coord[0] = min[0] + (max[0] - min[0])*(double(i)*ddx);
-		coord[1] = min[1] + (max[1] - min[1])*(double(j)*ddy);
-		coord[2] = min[2] + (max[2] - min[2])*(double(k)*ddz);
+		coord[0] = min[0] + (max[0] - min[0]) * (double(i) * ddx);
+		coord[1] = min[1] + (max[1] - min[1]) * (double(j) * ddy);
+		coord[2] = min[2] + (max[2] - min[2]) * (double(k) * ddz);
 
 		return coord;
 	}
 
 	//! Returns the Data.
-	double* getData();
+	double *getData();
 
 	//! Sets all entries in the volume to '0'
 	void clean();
@@ -126,9 +127,8 @@ public:
 
 	inline uint getPosFromTuple(int x, int y, int z) const
 	{
-		return x*dy*dz + y*dz + z;
+		return x * dy * dz + y * dz + z;
 	}
-
 
 	//! Lower left and Upper right corner.
 	Vector3d min, max;
@@ -142,14 +142,13 @@ public:
 	//! Number of cells in x, y and z-direction.
 	uint dx, dy, dz;
 
-	double* vol;
+	double *vol;
 
 	double maxValue, minValue;
 
 	uint m_dim;
 
 private:
-
 	//! x,y,z access to vol*
 	inline double vol_access(int x, int y, int z) const
 	{

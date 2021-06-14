@@ -52,20 +52,21 @@ message(STATUS "path to glog include directory = ${glog_INCLUDE_DIR}")
 
 # Set files to be compiled
 set(HEADER_FILES 
-    Eigen.h 
+    utils/Eigen.h 
     SimpleMesh.h 
     PointCloud.h 
-    VirtualSensor.h 
-    NearestNeighbor.h 
+    imageLoader/VirtualSensor.h 
+    utils/NearestNeighbor.h 
     ProcrustesAligner.h 
-    ICPOptimizer.h 
-    FreeImageHelper.h
-    Render.h
+    icp/ICPOptimizer.h 
+    imageLoader/FreeImageHelper.h
+    raycaster/Render.h
     Volume.h
     
 )
 set(SOURCE_FILES 
-    FreeImageHelper.cpp
+    imageLoader/FreeImageHelper.cpp
+    Volume.cpp
 )
 
 link_directories(${FreeImage_LIBRARY_DIR})
