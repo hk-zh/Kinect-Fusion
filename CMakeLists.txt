@@ -60,7 +60,7 @@ set(HEADER_FILES
     ProcrustesAligner.h 
     icp/ICPOptimizer.h 
     imageLoader/FreeImageHelper.h
-    raycaster/render.h
+    raycaster/Render.h
     Volume.h
     
 )
