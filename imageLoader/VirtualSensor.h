@@ -23,7 +23,7 @@ public:
         SAFE_DELETE_ARRAY(m_depthFrame_filtered);
 	}
 
-	bool init(const std::string &datasetDir, float sigma_s, float sigma_r)
+	bool init(const std::string &datasetDir, size_t sigma_s, float sigma_r)
 	{
 	    m_sigma_s = sigma_s;
 	    m_sigma_r = sigma_r;
@@ -271,15 +271,23 @@ private:
                 float sum_weights = 0;
                 float sum_values = 0;
 
-                for (size_t qx = 0; qx < m_depthImageHeight; ++qx) {
-                    for (size_t qy = 0; qy < m_depthImageWidth; ++qy) {
+                size_t qx_st = ux > m_sigma_s ? ux - m_sigma_s : 0;
+                size_t qy_st = uy > m_sigma_s ? uy - m_sigma_s : 0;
+                size_t qx_ed = ux + m_sigma_s + 1 < m_depthImageHeight ? ux + m_sigma_s + 1 : m_depthImageHeight;
+                size_t qy_ed = uy + m_sigma_s + 1 < m_depthImageWidth ? uy + m_sigma_s + 1 : m_depthImageWidth;
+
+                for (size_t qx = qx_st; qx < qx_ed; ++qx) {
+                    for (size_t qy = qy_st; qy < qy_ed; ++qy) {
                         if (*depth_locator(m_depthFrame, qx, qy) == MINF) {
                             continue;
                         }
 
                         float loc_diff_norm = (Vector2f(ux, uy) - Vector2f(qx, qy)).norm();
                         float depth_diff_norm = abs(*depth_locator(m_depthFrame, ux, uy) - *depth_locator(m_depthFrame, qx, qy));
-                        float tmp_w = n_sigma(loc_diff_norm, m_sigma_s) * n_sigma(depth_diff_norm, m_sigma_r);
+                        if (depth_diff_norm > 3.0f*static_cast<float>(m_sigma_r)) {
+                            continue;
+                        }
+                        float tmp_w = n_sigma(loc_diff_norm, static_cast<float>(m_sigma_s)) * n_sigma(depth_diff_norm, m_sigma_r);
 
                         sum_weights += tmp_w;
                         sum_values += tmp_w*(*depth_locator(m_depthFrame, qx, qy));
@@ -293,7 +301,8 @@ private:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 	// parameter for the filter
-	float m_sigma_s, m_sigma_r;
+	size_t m_sigma_s;
+	float m_sigma_r;
 
 	// current frame index
 	int m_currentIdx;
