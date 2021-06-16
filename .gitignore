@@ -12,3 +12,5 @@ _deps
 /build
 /.vscode
 /data
+/cmake-build-*/
+/.idea/

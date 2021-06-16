@@ -14,16 +14,20 @@ typedef unsigned char BYTE;
 class VirtualSensor
 {
 public:
-	VirtualSensor() : m_currentIdx(-1), m_increment(1), filter(false) {}
+	VirtualSensor() : m_currentIdx(-1), m_increment(1) {}
 
 	~VirtualSensor()
 	{
 		SAFE_DELETE_ARRAY(m_depthFrame);
 		SAFE_DELETE_ARRAY(m_colorFrame);
+        SAFE_DELETE_ARRAY(m_depthFrame_filtered);
 	}
 
-	bool init(const std::string &datasetDir)
+	bool init(const std::string &datasetDir, float sigma_s, float sigma_r)
 	{
+	    m_sigma_s = sigma_s;
+	    m_sigma_r = sigma_r;
+
 		m_baseDir = datasetDir;
 
 		// Read filename lists
@@ -62,6 +66,8 @@ public:
 		m_colorFrame = new BYTE[4 * m_colorImageWidth * m_colorImageHeight];
 		for (unsigned int i = 0; i < 4 * m_colorImageWidth * m_colorImageHeight; ++i)
 			m_colorFrame[i] = 255;
+
+        m_depthFrame_filtered = new float[m_depthImageWidth * m_depthImageHeight];
 
 		m_currentIdx = -1;
 		return true;
@@ -110,6 +116,8 @@ public:
 		}
 		m_currentTrajectory = m_trajectory[idx];
 
+		filter_depth_map();
+
 		return true;
 	}
 
@@ -121,22 +129,16 @@ public:
 	// get current color data
 	BYTE *getColorRGBX()
 	{
-		if (filter)
-		{
-			bilateralFilter();
-		}
 		return m_colorFrame;
 	}
 
 	// get current depth data
-	float *getDepth()
-	{
-		if (filter)
-		{
-			bilateralFilter();
+	float *getDepth(bool filter = false) {
+		if (filter) {
+			return m_depthFrame_filtered;
 		}
 		return m_depthFrame;
-		}
+	}
 
 	// color camera info
 	Eigen::Matrix3f getColorIntrinsics()
@@ -184,16 +186,6 @@ public:
 	Eigen::Matrix4f getTrajectory()
 	{
 		return m_currentTrajectory;
-	}
-
-	void activefilter()
-	{
-		filter = true;
-	}
-
-	void deacivefilter()
-	{
-		filter = false;
 	}
 
 private:
@@ -260,19 +252,56 @@ private:
 		file.close();
 		return true;
 	}
-	void bilateralFilter()
-	{
-		//TODO:
+	void filter_depth_map() {
+	    auto n_sigma = [](float x, float sigma) {
+	        return exp(-pow(x, 2)*pow(sigma, -2));
+	    };
+
+	    auto depth_locator = [&](float* base, size_t x, size_t y) {
+	        return base + x*m_depthImageWidth + y;
+	    };
+
+		for (size_t ux = 0; ux < m_depthImageHeight; ++ux) {
+            for (size_t uy = 0; uy < m_depthImageWidth; ++uy) {
+                if (*depth_locator(m_depthFrame, ux, uy) == MINF) {
+                    *depth_locator(m_depthFrame_filtered, ux, uy) = MINF;
+                    continue;
+                }
+
+                float sum_weights = 0;
+                float sum_values = 0;
+
+                for (size_t qx = 0; qx < m_depthImageHeight; ++qx) {
+                    for (size_t qy = 0; qy < m_depthImageWidth; ++qy) {
+                        if (*depth_locator(m_depthFrame, qx, qy) == MINF) {
+                            continue;
+                        }
+
+                        float loc_diff_norm = (Vector2f(ux, uy) - Vector2f(qx, qy)).norm();
+                        float depth_diff_norm = abs(*depth_locator(m_depthFrame, ux, uy) - *depth_locator(m_depthFrame, qx, qy));
+                        float tmp_w = n_sigma(loc_diff_norm, m_sigma_s) * n_sigma(depth_diff_norm, m_sigma_r);
+
+                        sum_weights += tmp_w;
+                        sum_values += tmp_w*(*depth_locator(m_depthFrame, qx, qy));
+                    }
+                }
+
+                *depth_locator(m_depthFrame_filtered, ux, uy) = sum_values / sum_weights;
+            }
+        }
 	}
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+	// parameter for the filter
+	float m_sigma_s, m_sigma_r;
 
 	// current frame index
 	int m_currentIdx;
 
 	int m_increment;
-	bool filter; // if we should use filter or not.
 	// frame data
 	float *m_depthFrame;
+    float *m_depthFrame_filtered;
 	BYTE *m_colorFrame;
 	Eigen::Matrix4f m_currentTrajectory;
 
