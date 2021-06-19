@@ -1,5 +1,4 @@
 #include "FreeImageHelper.h"
-
 #include <iostream>
 #include <cstring>
 

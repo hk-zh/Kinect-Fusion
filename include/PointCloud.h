@@ -1,6 +1,6 @@
 #pragma once
 #include "SimpleMesh.h"
-#include "utils/Eigen.h"
+#include "Eigen.h"
 
 class PointCloud
 {

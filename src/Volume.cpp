@@ -1,5 +1,5 @@
 #include "Volume.h"
-
+#include <iostream>
 //! Initializes an empty volume dataset.
 Volume::Volume(Vector3d min_, Vector3d max_, uint dx_, uint dy_, uint dz_, uint dim)
 {
@@ -10,18 +10,20 @@ Volume::Volume(Vector3d min_, Vector3d max_, uint dx_, uint dy_, uint dz_, uint 
 	dy = dy_;
 	dz = dz_;
 	m_dim = dim;
-	vol = NULL;
 
-	vol = new double[dx*dy*dz];
+	vol = new double[dx * dy * dz];
 
 	compute_ddx_dddx();
 }
 
 Volume::~Volume()
 {
-	delete[] vol;
+	if (vol != nullptr)
+	{
+		delete[] vol;
+		vol = nullptr;
+	}
 };
-
 
 //! Computes spacing in x,y,z-directions.
 void Volume::compute_ddx_dddx()
@@ -46,12 +48,12 @@ void Volume::compute_ddx_dddx()
 //! Zeros out the memory
 void Volume::zeroOutMemory()
 {
-	for (uint i1 = 0; i1 < dx*dy*dz; i1++)
+	for (uint i1 = 0; i1 < dx * dy * dz; i1++)
 		vol[i1] = double(0);
 }
 
 //! Returns the Data.
-double* Volume::getData()
+double *Volume::getData()
 {
 	return vol;
 };
@@ -59,7 +61,8 @@ double* Volume::getData()
 //! Sets all entries in the volume to '0'
 void Volume::clean()
 {
-	for (uint i1 = 0; i1 < dx*dy*dz; i1++) vol[i1] = double(0.0);
+	for (uint i1 = 0; i1 < dx * dy * dz; i1++)
+		vol[i1] = double(0.0);
 }
 
 //! Sets minimum extension

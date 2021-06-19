@@ -4,9 +4,9 @@ cmake_minimum_required(VERSION 3.6)
 
 # set(CMAKE_BUILD_TYPE Release)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+SET(EXTRA_WARNING_FLAGS "-Wsign-compare")
+SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 project(Kinect_Fusion)
 
@@ -49,24 +49,23 @@ message(STATUS "path to ceres include directory: ${Ceres_INCLUDE_DIR}")
 message(STATUS "glog library name: ${glog_LIBRARIES}")
 message(STATUS "path to glog include directory = ${glog_INCLUDE_DIR}")
 
-
+include_directories(include)
 # Set files to be compiled
 set(HEADER_FILES 
-    utils/Eigen.h 
-    SimpleMesh.h 
-    PointCloud.h 
-    imageLoader/VirtualSensor.h 
-    utils/NearestNeighbor.h 
-    ProcrustesAligner.h 
-    icp/ICPOptimizer.h 
-    imageLoader/FreeImageHelper.h
-    raycaster/Render.h
-    Volume.h
-    
+    include/Eigen.h 
+    include/SimpleMesh.h 
+    include/PointCloud.h 
+    include/VirtualSensor.h 
+    include/NearestNeighbor.h 
+    include/ProcrustesAligner.h 
+    include/ICPOptimizer.h 
+    include/FreeImageHelper.h
+    include/RayCaster.h
+    include/Volume.h
 )
 set(SOURCE_FILES 
-    imageLoader/FreeImageHelper.cpp
-    Volume.cpp
+    src/FreeImageHelper.cpp
+    src/Volume.cpp
 )
 
 link_directories(${FreeImage_LIBRARY_DIR})

@@ -1,18 +1,18 @@
 #include <iostream>
 #include <fstream>
 
-#include "utils/Eigen.h"
-#include "volume.h"
-#include "imageLoader/VirtualSensor.h"
+#include "Eigen.h"
+#include "Volume.h"
+#include "VirtualSensor.h"
 #include "SimpleMesh.h"
-#include "icp/ICPOptimizer.h"
+#include "ICPOptimizer.h"
 #include "PointCloud.h"
-#include "imageLoader/FreeImageHelper.h"
+#include "FreeImageHelper.h"
 
 #define MAX_FRAME_NUM 150
 #define SAVE_RATE 5
 
-int process_frame(int i, PointCloud prevFrame, PointCloud currentFrame, Volume volume)
+int process_frame(int i, PointCloud &prevFrame, PointCloud &currentFrame, Volume &volume)
 {
 	//TODO:
 	/*

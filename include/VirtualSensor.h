@@ -5,7 +5,7 @@
 #include <cstring>
 #include <fstream>
 
-#include "utils/Eigen.h"
+#include "Eigen.h"
 #include "FreeImageHelper.h"
 
 typedef unsigned char BYTE;

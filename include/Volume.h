@@ -4,7 +4,7 @@
 #define VOLUME_H
 
 #include <limits>
-#include "utils/Eigen.h"
+#include "Eigen.h"
 typedef unsigned int uint;
 
 //! A regular volume dataset

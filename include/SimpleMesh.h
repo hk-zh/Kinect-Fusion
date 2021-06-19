@@ -3,8 +3,8 @@
 #include <iostream>
 #include <fstream>
 
-#include "utils/Eigen.h"
-#include "imageLoader/VirtualSensor.h"
+#include "Eigen.h"
+#include "VirtualSensor.h"
 
 struct Vertex
 {
