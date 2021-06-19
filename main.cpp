@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include "utils/Eigen.h"
+#include "volume.h"
 #include "imageLoader/VirtualSensor.h"
 #include "SimpleMesh.h"
 #include "icp/ICPOptimizer.h"
@@ -9,7 +10,30 @@
 #include "imageLoader/FreeImageHelper.h"
 
 #define MAX_FRAME_NUM 150
+#define SAVE_RATE 5
 
+int process_frame(int i, PointCloud prevFrame, PointCloud currentFrame, Volume volume)
+{
+	//TODO:
+	/*
+     * ==========================================================
+	 * |                      BEGIN                             |
+	 * ==========================================================
+     */
+
+	// SETP 1: estimate Pose
+
+	// STEP 2: Surface Reconstruction
+
+	// STEP 3: Ray Casting
+
+	/*
+     * ==========================================================
+	 * |                       END                              |
+	 * ==========================================================
+     */
+	return 0;
+};
 int main()
 {
 	// path to the data folder
@@ -25,38 +49,51 @@ int main()
 		std::cout << "Failed to initialize the sensor!" << std::endl;
 		return -1;
 	}
+	// TODO: initialize Volume
+	Vector3d min(0, 0, 0);
+	Vector3d max(0, 0, 0);
+	Volume volume(min, max);
+	/*
+     * Configuration
+     */
 
-	// We store a first frame as a reference frame. All next frames are tracked relatively to the first frame.
+	/*
+     * ==========================================================
+	 * |                      BEGIN                             |
+	 * ==========================================================
+     */
+
+	/*
+     * ==========================================================
+	 * |                       END                              |
+	 * ==========================================================
+     */
+
+	/*
+     * Process a first frame as a reference frame.
+     * --> All next frames are tracked relatively to the first frame.
+     */
 	sensor.processNextFrame();
-	PointCloud target{sensor.getDepth(), sensor.getDepthIntrinsics(), sensor.getDepthExtrinsics(), sensor.getDepthImageWidth(), sensor.getDepthImageHeight()};
+	const unsigned int depthWidth = sensor.getDepthImageWidth();
+	const unsigned int depthHeight = sensor.getDepthImageHeight();
+	PointCloud prevFrame;
+	float *depth_map = sensor.getDepth();			   // get the depth map
+	float *depth_map_filtered = sensor.getDepth(true); // get the filtered depth map
 
-	/// BEGIN: Test for the filter
-	float *depth_map = sensor.getDepth();
-	float *depth_map_filtered = sensor.getDepth(true);
-	FreeImageU16F::SaveImageToFile(depth_map, "original.png", 640, 480, 1, true);
-	FreeImageU16F::SaveImageToFile(depth_map_filtered, "filtered.png", 640, 480, 1, true);
+	/* if you want to virtualize the depth map and fitered depth map ,please use following code */
+	// FreeImageU16F::SaveImageToFile(depth_map, "original.png", 640, 480, 1, true);
+	// FreeImageU16F::SaveImageToFile(depth_map_filtered, "filtered.png", 640, 480, 1, true);
 
-	// std::cout << "original:\n";
-	// for (size_t i = 0; i < sensor.getDepthImageHeight() * sensor.getColorImageWidth(); ++i)
-	// {
-	// 	if (!(i % sensor.getColorImageWidth()))
-	// 	{
-	// 		std::cout << std::endl;
-	// 	}
-	// 	std::cout << depth_map[i] << " ";
-	// }
-	// std::cout << "filtered:\n";
-	// for (size_t i = 0; i < sensor.getDepthImageHeight() * sensor.getColorImageWidth(); ++i)
-	// {
-	// 	if (!(i % sensor.getColorImageWidth()))
-	// 	{
-	// 		std::cout << std::endl;
-	// 	}
-	// 	std::cout << depth_map_filtered[i] << " ";
-	// }
-	// END:Test for the filter
+	// loop in our pipeline starts here
+	int i = 0;
+	while (i < MAX_FRAME_NUM && sensor.processNextFrame())
+	{
+		float *depth_map = sensor.getDepth(); // get the depth map
 
-	// TODO: set up optimizer
+		// TODO: createFrame
+		PointCloud currentFrame;
 
+		process_frame(i, prevFrame, currentFrame, volume);
+	}
 	return 0;
 }
