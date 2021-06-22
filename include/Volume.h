@@ -4,7 +4,7 @@
 #define VOLUME_H
 
 #include <limits>
-#include "utils/Eigen.h"
+#include "Eigen.h"
 typedef unsigned int uint;
 
 //! A regular volume dataset
@@ -13,7 +13,6 @@ class Volume
 public:
 	//! Initializes an empty volume dataset.
 	Volume(Vector3d min_, Vector3d max_, uint dx_ = 10, uint dy_ = 10, uint dz_ = 10, uint dim = 1);
-
 	~Volume();
 
 	inline void computeMinMaxValues(double &minVal, double &maxVal) const
