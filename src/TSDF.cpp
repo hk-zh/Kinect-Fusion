@@ -1,6 +1,6 @@
-#include "TsdfVolumn.h"
+#include "TSDF.h"
 
-void TsdfVolumn::update(VirtualSensor sensor, const Matrix4f& camera2world) {
+void TSDF::update(VirtualSensor& sensor, const Matrix4f& camera2world) {
     Matrix4f world2camera = camera2world.inverse();
     Matrix3f rotation = world2camera.block<3, 3>(0, 0);
     Vector3f translation = world2camera.block<3, 1>(0, 3);
@@ -17,8 +17,8 @@ void TsdfVolumn::update(VirtualSensor sensor, const Matrix4f& camera2world) {
         };
     };
     auto pixel2camera = [&focal_x, &focal_y, &principle_x, &principle_y](const Vector2i& point) {
-        return Vector3f{(static_cast<float>(point.x()) - principle_x) * focal_x,
-                        (static_cast<float>(point.y()) - principle_y) * focal_y,
+        return Vector3f{(static_cast<float>(point.x()) - principle_x) / focal_x,
+                        (static_cast<float>(point.y()) - principle_y) / focal_y,
                         1.0f
         };
     };
@@ -52,7 +52,6 @@ void TsdfVolumn::update(VirtualSensor sensor, const Matrix4f& camera2world) {
                 if (untruncated < -1.0f) {
                     continue;
                 }
-
                 const float truncated = std::min(1.0f, untruncated);
 
                 float old_tsdf = getDepth(x, y, z);

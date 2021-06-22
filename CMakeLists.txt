@@ -62,11 +62,11 @@ set(HEADER_FILES
     include/FreeImageHelper.h
     include/RayCaster.h
     include/Volume.h
-    include/TsdfVolumn.h)
+    include/TSDF.h)
 set(SOURCE_FILES 
     src/FreeImageHelper.cpp
     src/Volume.cpp
-    src/TsdfVolumn.cpp)
+    src/TSDF.cpp)
 
 link_directories(${FreeImage_LIBRARY_DIR})
 add_executable(Kinect_Fusion main.cpp ${HEADER_FILES} ${SOURCE_FILES})

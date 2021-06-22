@@ -8,6 +8,8 @@
 #include "ICPOptimizer.h"
 #include "PointCloud.h"
 #include "FreeImageHelper.h"
+#include "TSDF.h"
+#include "MarchingCubes.h"
 
 #define MAX_FRAME_NUM 150
 #define SAVE_RATE 5
@@ -49,11 +51,70 @@ int main()
 		std::cout << "Failed to initialize the sensor!" << std::endl;
 		return -1;
 	}
-	// TODO: initialize Volume
-	Vector3d min(0, 0, 0);
-	Vector3d max(0, 0, 0);
-	Volume volume(min, max);
-	/*
+
+	// unit: meter
+	// parameters for the volume model
+	Vector3i volSize (256, 256, 256);
+	float volUnit = 0.004f;
+	float truncation = 0.012f;
+	float init_depth = 1.0f;
+
+	TSDF volume(volSize, volUnit, truncation);
+
+	sensor.processNextFrame();
+	Matrix4f currentPos;
+    currentPos.setIdentity();
+    currentPos(0, 3) = static_cast<float>(volume.volSz.x()) / 2.0f * volume.volUnit;
+    currentPos(1, 3) = static_cast<float>(volume.volSz.y()) / 2.0f * volume.volUnit;
+    currentPos(2, 3) = static_cast<float>(volume.volSz.z()) / 2.0f * volume.volUnit - init_depth;
+	volume.update(sensor, currentPos);
+
+	// ================================================
+	// Direct MC on the model for the demonstration of the reconstruction only. Normally should use Raycasting on the model -> Mesh -> MC
+    Volume MC_vol(Vector3d(-0.1,-0.1,-0.1), Vector3d(1.1, 1.1, 1.1), 200, 200, 200);
+
+    for (unsigned int x = 0; x < MC_vol.getDimX(); x++)
+    {
+        for (unsigned int y = 0; y < MC_vol.getDimY(); y++)
+        {
+            for (unsigned int z = 0; z < MC_vol.getDimZ(); z++)
+            {
+                int xx = volume.volSz.x() * x / MC_vol.getDimX();
+                int yy = volume.volSz.y() * y / MC_vol.getDimY();
+                int zz = volume.volSz.z() * z / MC_vol.getDimZ();
+                double val = volume.getDepth(xx, yy, zz);
+                MC_vol.set(x,y,z, val);
+            }
+        }
+    }
+
+    // extract the zero iso-surface using marching cubes
+    SimpleMesh mesh;
+    for (unsigned int x = 0; x < MC_vol.getDimX() - 1; x++)
+    {
+        std::cerr << "Marching Cubes on slice " << x << " of " << MC_vol.getDimX() << std::endl;
+
+        for (unsigned int y = 0; y < MC_vol.getDimY() - 1; y++)
+        {
+            for (unsigned int z = 0; z < MC_vol.getDimZ() - 1; z++)
+            {
+                ProcessVolumeCell(&MC_vol, x, y, z, 0.00f, &mesh);
+            }
+        }
+    }
+
+    // write mesh to file
+    std::string filenameOut("meshSample.off");
+    if (!mesh.writeMesh(filenameOut))
+    {
+        std::cout << "ERROR: unable to write output file!" << std::endl;
+        return -1;
+    }
+    // Direct MC on the model for the demonstration of the reconstruction only. Normally should use Raycasting on the model -> Mesh -> MC
+    // ================================================
+
+
+    /*
      * Configuration
      */
 
@@ -69,31 +130,32 @@ int main()
 	 * ==========================================================
      */
 
-	/*
-     * Process a first frame as a reference frame.
-     * --> All next frames are tracked relatively to the first frame.
-     */
-	sensor.processNextFrame();
-	const unsigned int depthWidth = sensor.getDepthImageWidth();
-	const unsigned int depthHeight = sensor.getDepthImageHeight();
-	PointCloud prevFrame;
-	float *depth_map = sensor.getDepth();			   // get the depth map
-	float *depth_map_filtered = sensor.getDepth(true); // get the filtered depth map
+//	/*
+//     * Process a first frame as a reference frame.
+//     * --> All next frames are tracked relatively to the first frame.
+//     */
+//	sensor.processNextFrame();
+//	const unsigned int depthWidth = sensor.getDepthImageWidth();
+//	const unsigned int depthHeight = sensor.getDepthImageHeight();
+//	PointCloud prevFrame;
+//	float *depth_map = sensor.getDepth();			   // get the depth map
+//	float *depth_map_filtered = sensor.getDepth(true); // get the filtered depth map
+//
+//	/* if you want to virtualize the depth map and fitered depth map ,please use following code */
+//	 FreeImageU16F::SaveImageToFile(depth_map, "original.png", depthWidth, depthHeight, 1, true);
+//	 FreeImageU16F::SaveImageToFile(depth_map_filtered, "filtered.png", depthWidth, depthHeight, 1, true);
 
-	/* if you want to virtualize the depth map and fitered depth map ,please use following code */
-	// FreeImageU16F::SaveImageToFile(depth_map, "original.png", 640, 480, 1, true);
-	// FreeImageU16F::SaveImageToFile(depth_map_filtered, "filtered.png", 640, 480, 1, true);
 
-	// loop in our pipeline starts here
-	int i = 0;
-	while (i < MAX_FRAME_NUM && sensor.processNextFrame())
-	{
-		float *depth_map = sensor.getDepth(); // get the depth map
-
-		// TODO: createFrame
-		PointCloud currentFrame;
-
-		process_frame(i, prevFrame, currentFrame, volume);
-	}
+//	// loop in our pipeline starts here
+//	int i = 0;
+//	while (i < MAX_FRAME_NUM && sensor.processNextFrame())
+//	{
+//		float *depth_map = sensor.getDepth(); // get the depth map
+//
+//		// TODO: createFrame
+//		PointCloud currentFrame;
+//
+//		process_frame(i, prevFrame, currentFrame, volume);
+//	}
 	return 0;
 }
