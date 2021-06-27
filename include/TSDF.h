@@ -41,6 +41,8 @@ public:
 
     void update(VirtualSensor& sensor, const Matrix4f& camera2world);
 
+    void raycast(VirtualSensor& sensor, const Matrix4f& camera2world, Vector3f* vertex_prediction, Vector3f* normal_prediction);
+
     float getDepth(int x, int y, int z) const {
         assert(x < volSz.x() && x >= 0 && y < volSz.y() && y >= 0 && z < volSz.z() && z >= 0);
         return vol[z * volSz.y() * volSz.x() + y * volSz.x() + x];
