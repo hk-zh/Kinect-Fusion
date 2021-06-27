@@ -70,7 +70,7 @@ int main()
 	volume.update(sensor, currentPos);
 
 	// ================================================
-	// Direct MC on the model for the demonstration of the reconstruction only. Normally should use Raycasting on the model -> Mesh -> MC
+	// Direct MC on the model
     Volume MC_vol(Vector3d(-0.1,-0.1,-0.1), Vector3d(1.1, 1.1, 1.1), 200, 200, 200);
 
     for (unsigned int x = 0; x < MC_vol.getDimX(); x++)
@@ -83,7 +83,8 @@ int main()
                 int yy = volume.volSz.y() * y / MC_vol.getDimY();
                 int zz = volume.volSz.z() * z / MC_vol.getDimZ();
                 double val = volume.getDepth(xx, yy, zz);
-                MC_vol.set(x,y,z, val);
+                bool valid = volume.getWeight(xx, yy, zz) > 0;
+                MC_vol.set(x, y, z, val, valid);
             }
         }
     }

@@ -18,10 +18,6 @@ class TSDF {
         vol[z * volSz.y() * volSz.x() + y * volSz.x() + x] = v;
     }
 
-    float getWeight(int x, int y, int z) const {
-        assert(x < volSz.x() && x >= 0 && y < volSz.y() && y >= 0 && z < volSz.z() && z >= 0);
-        return weight[z * volSz.y() * volSz.x() + y * volSz.x() + x];
-    }
     void setWeight(int x, int y, int z, float v) {
         assert(x < volSz.x() && x >= 0 && y < volSz.y() && y >= 0 && z < volSz.z() && z >= 0);
         assert(abs(v) <= 1);
@@ -46,6 +42,11 @@ public:
     float getDepth(int x, int y, int z) const {
         assert(x < volSz.x() && x >= 0 && y < volSz.y() && y >= 0 && z < volSz.z() && z >= 0);
         return vol[z * volSz.y() * volSz.x() + y * volSz.x() + x];
+    }
+
+    float getWeight(int x, int y, int z) const {
+        assert(x < volSz.x() && x >= 0 && y < volSz.y() && y >= 0 && z < volSz.z() && z >= 0);
+        return weight[z * volSz.y() * volSz.x() + y * volSz.x() + x];
     }
 };
 

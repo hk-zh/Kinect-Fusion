@@ -34,22 +34,23 @@ public:
 	//! Zeros out the memory
 	void zeroOutMemory();
 
-	//! Set the value at i.
-	inline void set(uint i, double val)
-	{
-		if (val > maxValue)
-			maxValue = val;
-
-		if (val < minValue)
-			minValue = val;
-
-		vol[i] = val;
-	}
+//	//! Set the value at i.
+//	inline void set(uint i, double val)
+//	{
+//		if (val > maxValue)
+//			maxValue = val;
+//
+//		if (val < minValue)
+//			minValue = val;
+//
+//		vol[i] = val;
+//	}
 
 	//! Set the value at (x_, y_, z_).
-	inline void set(uint x_, uint y_, uint z_, double val)
+	inline void set(uint x_, uint y_, uint z_, double val, bool valid_)
 	{
 		vol[getPosFromTuple(x_, y_, z_)] = val;
+		valid[getPosFromTuple(x_, y_, z_)] = valid_;
 	};
 
 	//! Get the value at (x_, y_, z_).
@@ -63,6 +64,11 @@ public:
 	{
 		return vol[getPosFromTuple(x_, y_, z_)];
 	};
+
+    inline bool get_validity(uint x_, uint y_, uint z_) const
+    {
+        return valid[getPosFromTuple(x_, y_, z_)];
+    };
 
 	//! Get the value at (pos.x, pos.y, pos.z).
 	inline double get(const Vector3i &pos_) const
@@ -142,6 +148,8 @@ public:
 	uint dx, dy, dz;
 
 	double *vol;
+
+	bool *valid;
 
 	double maxValue, minValue;
 
