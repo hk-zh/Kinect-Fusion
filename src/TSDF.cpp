@@ -1,4 +1,6 @@
 #include "TSDF.h"
+#include <exception>
+#include <iostream>
 
 void TSDF::update(VirtualSensor& sensor, const Matrix4f& camera2world) {
     Matrix4f world2camera = camera2world.inverse();
@@ -86,9 +88,14 @@ void TSDF::raycast(VirtualSensor& sensor, const Matrix4f& camera2world, Vector3f
         };
     };
 
-    unsigned height = sensor.getDepthImageWidth();
-    auto locator = [&height](Vector3f *base, size_t x, size_t y) {
-        return base + x * height + y;
+    unsigned width = sensor.getDepthImageWidth();
+    unsigned height = sensor.getDepthImageHeight();
+    auto locator = [&width, &height](Vector3f* base, size_t x, size_t y) {
+        if (!(x >=0 && y >= 0 && y < width && x < height)) {
+            std::cout << x << " " << y << " " << height << " " << width << "\n";
+            throw std::exception();
+        }
+        return static_cast<Vector3f*>(base + x * width + y);
     };
 
     auto invalidator = [&locator, &vertex_prediction, &normal_prediction](size_t x, size_t y) {
@@ -118,8 +125,8 @@ void TSDF::raycast(VirtualSensor& sensor, const Matrix4f& camera2world, Vector3f
         this->getDepth(static_cast<int>(base_x + 1), static_cast<int>(base_y + 1), static_cast<int>(base_z + 1)) * (ratio_x) * (ratio_y) * (ratio_z);
     };
 
-    for (int x = 0; x < sensor.getColorImageWidth(); ++x) {
-        for (int y = 0; y < sensor.getDepthImageHeight(); ++y) {
+    for (int x = 0; x < sensor.getDepthImageHeight(); ++x) {
+        for (int y = 0; y < sensor.getDepthImageWidth(); ++y) {
             Vector3f unitRay = (rotation * pixel2camera(Vector2i(x, y))).normalized();
 
             float vol_max_x = static_cast<float>(volSz.x()) * volUnit;
