@@ -12,6 +12,7 @@ Volume::Volume(Vector3d min_, Vector3d max_, uint dx_, uint dy_, uint dz_, uint 
 	m_dim = dim;
 
 	vol = new double[dx * dy * dz];
+	valid = new bool[dx * dy * dz];
 
 	compute_ddx_dddx();
 }
@@ -23,6 +24,12 @@ Volume::~Volume()
 		delete[] vol;
 		vol = nullptr;
 	}
+
+	if (valid != nullptr)
+    {
+        delete[] valid;
+        valid = nullptr;
+    }
 };
 
 //! Computes spacing in x,y,z-directions.

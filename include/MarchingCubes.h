@@ -448,18 +448,30 @@ bool ProcessVolumeCell(Volume *vol, int x, int y, int z, double iso, SimpleMesh 
 	tmp = vol->pos(x + 1, y + 1, z + 1);
 	cell.p[7] = Vector3d(tmp[0], tmp[1], tmp[2]);
 
+	bool valid = true;
 	// cell corner values
 	cell.val[0] = (double)vol->get(x + 1, y, z);
+    valid &= vol->get_validity(x + 1, y, z);
 	cell.val[1] = (double)vol->get(x, y, z);
+    valid &= vol->get_validity(x, y, z);
 	cell.val[2] = (double)vol->get(x, y + 1, z);
+    valid &= vol->get_validity(x, y + 1, z);
 	cell.val[3] = (double)vol->get(x + 1, y + 1, z);
+    valid &= vol->get_validity(x + 1, y + 1, z);
 	cell.val[4] = (double)vol->get(x + 1, y, z + 1);
+    valid &= vol->get_validity(x + 1, y, z + 1);
 	cell.val[5] = (double)vol->get(x, y, z + 1);
+    valid &= vol->get_validity(x, y, z + 1);
 	cell.val[6] = (double)vol->get(x, y + 1, z + 1);
+    valid &= vol->get_validity(x, y + 1, z + 1);
 	cell.val[7] = (double)vol->get(x + 1, y + 1, z + 1);
+    valid &= vol->get_validity(x + 1, y + 1, z + 1);
 
 	MC_Triangle tris[6];
-	int numTris = Polygonise(cell, iso, tris);
+	int numTris = 0;
+	if (valid) {
+        numTris = Polygonise(cell, iso, tris);
+	}
 
 	if (numTris == 0)
 		return false;

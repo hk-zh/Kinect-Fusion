@@ -143,6 +143,16 @@ public:
 		return m_depthFrame;
 	}
 
+	// get depth data at specified position
+	float getDepth(size_t x_width, size_t y_height, bool filter = false) const
+    {
+        if (filter)
+        {
+            return m_depthFrame_filtered[y_height * m_depthImageWidth + x_width];
+        }
+        return m_depthFrame[y_height * m_depthImageWidth + x_width];
+    }
+
 	// color camera info
 	Eigen::Matrix3f getColorIntrinsics()
 	{
