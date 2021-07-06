@@ -2,11 +2,11 @@
 #include <exception>
 #include <iostream>
 
-void get_current_info(VirtualSensor &sensor, Vector3f *vertex_current, Vector3f *normal_current)
+void TSDF::get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f *vertex_current, Vector3f *normal_current)
 {
     float *depthMap = sensor.getDepth();
     const Matrix3f &depthIntrinsics = sensor.getDepthIntrinsics();
-    const Matrix4f &depthExtrinsics = sensor.getDepthExtrinsics();
+    const Matrix4f &depthExtrinsics = camera2world;
     const unsigned height = sensor.getDepthImageHeight();
     const unsigned width = sensor.getDepthImageWidth();
     float fovX = depthIntrinsics(0, 0);
@@ -21,7 +21,7 @@ void get_current_info(VirtualSensor &sensor, Vector3f *vertex_current, Vector3f 
     Matrix3f rotationInv = depthExtrinsicsInv.block(0, 0, 3, 3);
     Vector3f translationInv = depthExtrinsicsInv.block(0, 3, 3, 1);
 
-#pragma omp parallel for
+    // #pragma omp parallel for
     for (int v = 0; v < (int)height; ++v)
     {
         // For every pixel in a row.
@@ -40,7 +40,7 @@ void get_current_info(VirtualSensor &sensor, Vector3f *vertex_current, Vector3f 
             }
         }
     }
-#pragma omp parallel for
+    // #pragma omp parallel for
     for (int v = 1; v < (int)(height - 1); ++v)
     {
         for (int u = 1; u < (int)(width - 1); ++u)
@@ -164,7 +164,7 @@ void TSDF::raycast(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f
     unsigned height = sensor.getDepthImageHeight();
     auto locator = [&width, &height](Vector3f *base, size_t x, size_t y)
     {
-        if (!(x >= 0 && y >= 0 && y < width && x < height))
+        if (!(x >= 0 && y >= 0 && x < height && y < width))
         {
             std::cout << x << " " << y << " " << height << " " << width << "\n";
             throw std::exception();
@@ -205,7 +205,7 @@ void TSDF::raycast(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f
     {
         for (int y = 0; y < sensor.getDepthImageWidth(); ++y)
         {
-            Vector3f unitRay = (rotation * pixel2camera(Vector2i(x, y))).normalized();
+            Vector3f unitRay = (rotation * pixel2camera(Vector2i(y, x))).normalized();
 
             float vol_max_x = static_cast<float>(volSz.x()) * volUnit;
             float vol_max_y = static_cast<float>(volSz.y()) * volUnit;
@@ -228,6 +228,7 @@ void TSDF::raycast(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f
             }
 
             Vector3f grid = ((unitRay * (ray_len_st + volUnit)) + translation) / volUnit;
+
             float val = getDepth(static_cast<int>(grid.x()), static_cast<int>(grid.y()), static_cast<int>(grid.z()));
             float last_val;
 

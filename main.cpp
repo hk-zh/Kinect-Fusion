@@ -11,7 +11,22 @@
 #include "TSDF.h"
 #include "MarchingCubes.h"
 
-#define USE_LINEAR_ICP 0
+#define USE_LINEAR_ICP 1
+#define SAMPEL_FREQUENCE 8
+
+void sample(std::vector<Vector3f> a1, Vector3f *b1, std::vector<Vector3f> a2, Vector3f *b2, unsigned int num_pixels)
+{
+    a1.reserve(std::floor((float)num_pixels / SAMPEL_FREQUENCE) + 1);
+    a2.reserve(std::floor((float)num_pixels / SAMPEL_FREQUENCE) + 1);
+    for (int i = 0; i < num_pixels; i = i + SAMPEL_FREQUENCE)
+    {
+        if (b1[i].allFinite() && b2[i].allFinite())
+        {
+            a1.push_back(b1[i]);
+            a2.push_back(b2[i]);
+        }
+    }
+}
 
 int main()
 {
@@ -34,7 +49,7 @@ int main()
     // unit: meter
     // parameters for the volume model
     Vector3i volSize(256, 256, 256);
-    float volUnit = 0.004f;
+    float volUnit = 0.006f;
     float truncation = 0.012f;
     float init_depth = 1.0f;
 
@@ -46,15 +61,16 @@ int main()
     currentPos(1, 3) = static_cast<float>(volume.volSz.y()) / 2.0f * volume.volUnit;
     currentPos(2, 3) = static_cast<float>(volume.volSz.z()) / 2.0f * volume.volUnit - init_depth;
 
-    std::unique_ptr<Vector3f[]> vertex_prediction = std::make_unique<Vector3f[]>(sensor.getDepthImageWidth() * sensor.getDepthImageHeight());
-    std::unique_ptr<Vector3f[]> normal_prediction = std::make_unique<Vector3f[]>(sensor.getDepthImageWidth() * sensor.getDepthImageHeight());
-    std::unique_ptr<Vector3f[]> vertex_current = std::make_unique<Vector3f[]>(sensor.getDepthImageWidth() * sensor.getDepthImageHeight());
-    std::unique_ptr<Vector3f[]> normal_current = std::make_unique<Vector3f[]>(sensor.getDepthImageWidth() * sensor.getDepthImageHeight());
+    unsigned int num_pixels = sensor.getDepthImageWidth() * sensor.getDepthImageHeight();
+    std::unique_ptr<Vector3f[]> vertex_prediction = std::make_unique<Vector3f[]>(num_pixels);
+    std::unique_ptr<Vector3f[]> normal_prediction = std::make_unique<Vector3f[]>(num_pixels);
+    std::unique_ptr<Vector3f[]> vertex_current = std::make_unique<Vector3f[]>(num_pixels);
+    std::unique_ptr<Vector3f[]> normal_current = std::make_unique<Vector3f[]>(num_pixels);
 
-    // std::vector<Vector3f> vertex_prediction;
-    // std::vector<Vector3f> normal_prediction;
-    // std::vector<Vector3f> vertex_current;
-    // std::vector<Vector3f> normal_current;
+    std::vector<Vector3f> vertex_prediction_v;
+    std::vector<Vector3f> normal_prediction_v;
+    std::vector<Vector3f> vertex_current_v;
+    std::vector<Vector3f> normal_current_v;
     // ==========================================================
     // Set up optimizer
     ICPOptimizer *optimizer = nullptr;
@@ -78,14 +94,19 @@ int main()
     for (int i = 0; i < number_of_frames; ++i)
     {
         sensor.processNextFrame();
-        volume.get_current_info(sensor, vertex_current.get(), vertex_current.get());
+        volume.get_current_info(sensor, currentPos, vertex_current.get(), normal_current.get());
         if (i != 0)
         {
-            // currentPos = optimizer->estimatePose(vertex_current.get(), normal_current.get(), vertex_prediction.get(), normal_prediction.get());
+            sample(vertex_prediction_v, vertex_prediction.get(), normal_prediction_v, normal_prediction.get(), num_pixels);
+            sample(vertex_current_v, vertex_current.get(), normal_current_v, normal_current.get(), num_pixels);
+
+            //currentPos = optimizer->estimatePose(vertex_current_v, normal_current_v, vertex_prediction_v, normal_prediction_v, currentPos);
         }
         volume.update(sensor, currentPos);
         volume.raycast(sensor, currentPos, vertex_prediction.get(), normal_prediction.get());
 
+        FreeImageB::SaveImageToFile(normal_current.get(), "normal_current.png", sensor.getColorImageWidth(), sensor.getColorImageHeight(), false);
+        FreeImageB::SaveImageToFile(normal_prediction.get(), "normal_prediction.png", sensor.getColorImageWidth(), sensor.getColorImageHeight(), false);
         // Test Raycast
         auto vertexValidate = [](const Vector3f &v)
         {
