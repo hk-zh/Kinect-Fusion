@@ -14,3 +14,5 @@ _deps
 /data
 /cmake-build-*/
 /.idea/
+/libs
+/flann

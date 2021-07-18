@@ -6,7 +6,7 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 #include <flann/flann.hpp>
-
+#include <Eigen.h>
 #include "SimpleMesh.h"
 #include "NearestNeighbor.h"
 #include "PointCloud.h"
@@ -221,7 +221,7 @@ public:
 		m_nIterations = nIterations;
 	}
 
-	virtual Matrix4f estimatePose(const PointCloud &source, const PointCloud &target, Matrix4f initialPose = Matrix4f::Identity()) = 0;
+	virtual Matrix4f estimatePose(std::vector<Vector3f> vertex_current, std::vector<Vector3f> normal_current, std::vector<Vector3f> vertex_prediction, std::vector<Vector3f> normal_prediction, Matrix4f initialPose = Matrix4f::Identity()) = 0;
 	virtual ~ICPOptimizer()
 	{
 		std::cout << "ICPOptimizer deleted!" << std::endl;
@@ -294,10 +294,10 @@ class CeresICPOptimizer : public ICPOptimizer
 public:
 	CeresICPOptimizer() {}
 
-	virtual Matrix4f estimatePose(const PointCloud &source, const PointCloud &target, Matrix4f initialPose = Matrix4f::Identity()) override
+	virtual Matrix4f estimatePose(std::vector<Vector3f> vertex_current, std::vector<Vector3f> normal_current, std::vector<Vector3f> vertex_prediction, std::vector<Vector3f> normal_prediction, Matrix4f initialPose = Matrix4f::Identity()) override
 	{
 		// Build the index of the FLANN tree (for fast nearest neighbor lookup).
-		m_nearestNeighborSearch->buildIndex(target.getPoints());
+		m_nearestNeighborSearch->buildIndex(vertex_current);
 
 		// The initial estimate can be given as an argument.
 		Matrix4f estimatedPose = initialPose;
@@ -314,11 +314,11 @@ public:
 			std::cout << "Matching points ..." << std::endl;
 			clock_t begin = clock();
 
-			auto transformedPoints = transformPoints(source.getPoints(), estimatedPose);
-			auto transformedNormals = transformNormals(source.getNormals(), estimatedPose);
+			auto transformedPoints = transformPoints(vertex_prediction, estimatedPose);
+			auto transformedNormals = transformNormals(normal_prediction, estimatedPose);
 
 			auto matches = m_nearestNeighborSearch->queryMatches(transformedPoints);
-			pruneCorrespondences(transformedNormals, target.getNormals(), matches);
+			pruneCorrespondences(transformedNormals, normal_current, matches);
 
 			clock_t end = clock();
 			double elapsedSecs = double(end - begin) / CLOCKS_PER_SEC;
@@ -326,7 +326,7 @@ public:
 
 			// Prepare point-to-point and point-to-plane constraints.
 			ceres::Problem problem;
-			prepareConstraints(transformedPoints, target.getPoints(), target.getNormals(), matches, poseIncrement, problem);
+			prepareConstraints(transformedPoints, vertex_current, normal_current, matches, poseIncrement, problem);
 
 			// Configure options for the solver.
 			ceres::Solver::Options options;
@@ -413,10 +413,10 @@ public:
 	{
 		std::cout << "LinearICPOptimizer deleted!" << std::endl;
 	}
-	virtual Matrix4f estimatePose(const PointCloud &source, const PointCloud &target, Matrix4f initialPose = Matrix4f::Identity()) override
+	virtual Matrix4f estimatePose(std::vector<Vector3f> vertex_current, std::vector<Vector3f> normal_current, std::vector<Vector3f> vertex_prediction, std::vector<Vector3f> normal_prediction, Matrix4f initialPose = Matrix4f::Identity()) override
 	{
 		// Build the index of the FLANN tree (for fast nearest neighbor lookup).
-		m_nearestNeighborSearch->buildIndex(target.getPoints());
+		m_nearestNeighborSearch->buildIndex(vertex_current);
 
 		// The initial estimate can be given as an argument.
 		Matrix4f estimatedPose = initialPose;
@@ -427,11 +427,11 @@ public:
 			std::cout << "Matching points ..." << std::endl;
 			clock_t begin = clock();
 
-			auto transformedPoints = transformPoints(source.getPoints(), estimatedPose);
-			auto transformedNormals = transformNormals(source.getNormals(), estimatedPose);
+			auto transformedPoints = transformPoints(vertex_prediction, estimatedPose);
+			auto transformedNormals = transformNormals(normal_prediction, estimatedPose);
 
 			auto matches = m_nearestNeighborSearch->queryMatches(transformedPoints);
-			pruneCorrespondences(transformedNormals, target.getNormals(), matches);
+			pruneCorrespondences(transformedNormals, normal_current, matches);
 
 			clock_t end = clock();
 			double elapsedSecs = double(end - begin) / CLOCKS_PER_SEC;
@@ -448,14 +448,14 @@ public:
 				if (match.idx >= 0)
 				{
 					sourcePoints.push_back(transformedPoints[j]);
-					targetPoints.push_back(target.getPoints()[match.idx]);
+					targetPoints.push_back(vertex_current[match.idx]);
 				}
 			}
 
 			// Estimate the new pose
 			if (m_bUsePointToPlaneConstraints)
 			{
-				estimatedPose = estimatePosePointToPlane(sourcePoints, targetPoints, target.getNormals()) * estimatedPose;
+				estimatedPose = estimatePosePointToPlane(sourcePoints, targetPoints, normal_current) * estimatedPose;
 			}
 			else
 			{
