@@ -94,6 +94,8 @@ int main()
     for (int i = 0; i < number_of_frames; ++i)
     {
         sensor.processNextFrame();
+        
+        //get the current values of vertex_current and normal_current to save as a file in the project folder
         volume.get_current_info(sensor, currentPos, vertex_current.get(), normal_current.get());
         if (i != 0)
         {
@@ -102,11 +104,19 @@ int main()
 
             //currentPos = optimizer->estimatePose(vertex_current_v, normal_current_v, vertex_prediction_v, normal_prediction_v, currentPos);
         }
+
+        //update the weight and height of new tsdf
         volume.update(sensor, currentPos);
+        //raycasting and save the result into vertex_prediction and normal_prediction
+        //TODO: fix the raycast method there is some noisy?
         volume.raycast(sensor, currentPos, vertex_prediction.get(), normal_prediction.get());
 
         FreeImageB::SaveImageToFile(normal_current.get(), "normal_current.png", sensor.getColorImageWidth(), sensor.getColorImageHeight(), false);
         FreeImageB::SaveImageToFile(normal_prediction.get(), "normal_prediction.png", sensor.getColorImageWidth(), sensor.getColorImageHeight(), false);
+
+        FreeImageB::SaveImageToFile(vertex_current.get(), "vertex_current.png", sensor.getColorImageWidth(), sensor.getColorImageHeight(), false);
+        FreeImageB::SaveImageToFile(vertex_prediction.get(), "vertex_prediction.png", sensor.getColorImageWidth(), sensor.getColorImageHeight(), false);
+        
         // Test Raycast
         auto vertexValidate = [](const Vector3f &v)
         {
@@ -200,6 +210,7 @@ int main()
         }
     }
 
+    /*
     // extract the zero iso-surface using marching cubes
     SimpleMesh mesh;
     for (unsigned int x = 0; x < MC_vol.getDimX() - 1; x++)
@@ -222,6 +233,8 @@ int main()
         std::cout << "ERROR: unable to write output file!" << std::endl;
         return -1;
     }
+    */
+
     // ==========================================================
 
     // ==========================================================
