@@ -22,6 +22,7 @@ void TSDF::get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world,
     Vector3f translationInv = depthExtrinsicsInv.block(0, 3, 3, 1);
 
     // #pragma omp parallel for
+    // from exercises
     for (int v = 0; v < (int)height; ++v)
     {
         // For every pixel in a row.
@@ -41,6 +42,7 @@ void TSDF::get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world,
         }
     }
     // #pragma omp parallel for
+    // from exercises
     for (int v = 1; v < (int)(height - 1); ++v)
     {
         for (int u = 1; u < (int)(width - 1); ++u)
@@ -191,14 +193,23 @@ void TSDF::raycast(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f
         float ratio_z = point.z() - base_z;
         ratio_z += static_cast<float>(ratio_z < 0);
 
-        return this->getDepth(static_cast<int>(base_x), static_cast<int>(base_y), static_cast<int>(base_z)) * (1 - ratio_x) * (1 - ratio_y) * (1 - ratio_z) +
-               this->getDepth(static_cast<int>(base_x + 1), static_cast<int>(base_y), static_cast<int>(base_z)) * (ratio_x) * (1 - ratio_y) * (1 - ratio_z) +
-               this->getDepth(static_cast<int>(base_x), static_cast<int>(base_y + 1), static_cast<int>(base_z)) * (1 - ratio_x) * (ratio_y) * (1 - ratio_z) +
-               this->getDepth(static_cast<int>(base_x), static_cast<int>(base_y), static_cast<int>(base_z + 1)) * (1 - ratio_x) * (1 - ratio_y) * (ratio_z) +
-               this->getDepth(static_cast<int>(base_x + 1), static_cast<int>(base_y + 1), static_cast<int>(base_z)) * (ratio_x) * (ratio_y) * (1 - ratio_z) +
-               this->getDepth(static_cast<int>(base_x + 1), static_cast<int>(base_y), static_cast<int>(base_z + 1)) * (ratio_x) * (1 - ratio_y) * (ratio_z) +
-               this->getDepth(static_cast<int>(base_x), static_cast<int>(base_y + 1), static_cast<int>(base_z + 1)) * (1 - ratio_x) * (ratio_y) * (ratio_z) +
-               this->getDepth(static_cast<int>(base_x + 1), static_cast<int>(base_y + 1), static_cast<int>(base_z + 1)) * (ratio_x) * (ratio_y) * (ratio_z);
+        float c000 = this->getDepth(static_cast<int>(base_x), static_cast<int>(base_y), static_cast<int>(base_z));
+		float c001 = this->getDepth(static_cast<int>(base_x), static_cast<int>(base_y), static_cast<int>(base_z + 1));
+		float c010 = this->getDepth(static_cast<int>(base_x), static_cast<int>(base_y + 1), static_cast<int>(base_z));
+		float c011 = this->getDepth(static_cast<int>(base_x), static_cast<int>(base_y + 1), static_cast<int>(base_z + 1));
+		float c100 = this->getDepth(static_cast<int>(base_x + 1), static_cast<int>(base_y), static_cast<int>(base_z));
+		float c101 = this->getDepth(static_cast<int>(base_x + 1), static_cast<int>(base_y), static_cast<int>(base_z + 1));
+		float c110 = this->getDepth(static_cast<int>(base_x + 1), static_cast<int>(base_y + 1), static_cast<int>(base_z));
+		float c111 = this->getDepth(static_cast<int>(base_x + 1), static_cast<int>(base_y + 1), static_cast<int>(base_z + 1));
+
+        return c000 * (1 - ratio_x) * (1 - ratio_y) * (1 - ratio_z) +
+               c100 * (ratio_x) * (1 - ratio_y) * (1 - ratio_z) +
+               c010 * (1 - ratio_x) * (ratio_y) * (1 - ratio_z) +
+               c001 * (1 - ratio_x) * (1 - ratio_y) * (ratio_z) +
+               c110 * (ratio_x) * (ratio_y) * (1 - ratio_z) +
+               c101 * (ratio_x) * (1 - ratio_y) * (ratio_z) +
+               c011 * (1 - ratio_x) * (ratio_y) * (ratio_z) +
+               c111 * (ratio_x) * (ratio_y) * (ratio_z);
     };
 
     for (int x = 0; x < sensor.getDepthImageHeight(); ++x)
@@ -254,9 +265,10 @@ void TSDF::raycast(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f
                 }
                 if (last_val > 0 && val < 0)
                 {
-                    float ray_len_interpolation = ray_len + truncation / 2.0f * (last_val / (val - last_val));
+                    float ray_len_interpolation = ray_len + (truncation / 2.0f) * (last_val / (val - last_val));
                     Vector3f vertex = unitRay * ray_len_interpolation + translation;
                     Vector3f grid_interpolation = vertex / volUnit;
+
                     if (grid_interpolation.x() < 1 || grid_interpolation.x() >= static_cast<float>(volSz.x()) - 1 ||
                         grid_interpolation.y() < 1 || grid_interpolation.y() >= static_cast<float>(volSz.y()) - 1 ||
                         grid_interpolation.z() < 1 || grid_interpolation.z() >= static_cast<float>(volSz.z()) - 1)
