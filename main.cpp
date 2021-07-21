@@ -48,8 +48,20 @@ int main()
     // Configuration
     // unit: meter
     // parameters for the volume model
+    //volUnit = 0.006f
+    //volUnit = 0.0045 core dumped
+    //volUnit = 0.0050f core dumped
+    //volUnit = 0.0058f worked but improve more
+    //volUnit = 0.0070f worked more fine than 0.0058 --> best for coulur
+    //volUnit = 0.0075f worked more fine than 0.0070
+    //volUnit = 0.0080f core dumped 
+    //volUnit = 0.0090f core dumped
+    //volUnit = 0.0090f + TSDF 95 changed volsZ from volSz.x() to volSz.x()-5 it worked fine than 0.0070 --> worked fine but coulur changed inerestingly
+    //volUnit = 0.01f worked fine
+    //volUnit = 0.02f not worked well
+
     Vector3i volSize(256, 256, 256);
-    float volUnit = 0.006f;
+    float volUnit = 0.005f;
     float truncation = 0.012f;
     float init_depth = 1.0f;
 
@@ -96,6 +108,7 @@ int main()
         sensor.processNextFrame();
         
         //get the current values of vertex_current and normal_current to save as a file in the project folder
+        // If there is no get current infor nothing changed
         volume.get_current_info(sensor, currentPos, vertex_current.get(), normal_current.get());
         if (i != 0)
         {
@@ -106,6 +119,7 @@ int main()
         }
 
         //update the weight and height of new tsdf
+        // If there is no update everythings are black
         volume.update(sensor, currentPos);
         //raycasting and save the result into vertex_prediction and normal_prediction
         //TODO: fix the raycast method there is some noisy?
