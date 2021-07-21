@@ -22,7 +22,7 @@ void TSDF::get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world,
     Vector3f translationInv = depthExtrinsicsInv.block(0, 3, 3, 1);
 
     // #pragma omp parallel for
-    // from exercises
+    // from exercises 3 or 5
     for (int v = 0; v < (int)height; ++v)
     {
         // For every pixel in a row.
@@ -92,15 +92,15 @@ void TSDF::update(VirtualSensor &sensor, const Matrix4f &camera2world)
                         1.0f};
     };
 
-    for (int x = 0; x < volSz.x(); ++x)
+    for (int x = 0; x < volSz.x()-5; ++x)
     {
-        for (int y = 0; y < volSz.y(); ++y)
+        for (int y = 0; y < volSz.y()-5; ++y)
         {
-            for (int z = 0; z < volSz.z(); ++z)
+            for (int z = 0; z < volSz.z()-5; ++z)
             {
-                Vector3f pos_in_world{(static_cast<float>(x) + 0.5f) * volUnit,
-                                      (static_cast<float>(y) + 0.5f) * volUnit,
-                                      (static_cast<float>(z) + 0.5f) * volUnit};
+                Vector3f pos_in_world{(static_cast<float>(x) + 5.0f) * volUnit,
+                                      (static_cast<float>(y) + 5.0f) * volUnit,
+                                      (static_cast<float>(z) + 5.0f) * volUnit};
                 Vector3f pos_in_camera = rotation * pos_in_world + translation;
                 if (pos_in_camera.z() <= 0)
                 {
