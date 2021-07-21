@@ -23,10 +23,10 @@ void TSDF::get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world,
 
     // #pragma omp parallel for
     // from exercises 3 or 5
-    for (int v = 0; v < (int)height; ++v)
+    for (int v = 0; v < (int)height-5; ++v)
     {
         // For every pixel in a row.
-        for (int u = 0; u < (int)width; ++u)
+        for (int u = 0; u < (int)width-5; ++u)
         {
             unsigned int idx = v * width + u; // linearized index
             float depth = depthMap[idx];
@@ -43,9 +43,9 @@ void TSDF::get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world,
     }
     // #pragma omp parallel for
     // from exercises
-    for (int v = 1; v < (int)(height - 1); ++v)
+    for (int v = 1; v < (int)(height - 6); ++v)
     {
-        for (int u = 1; u < (int)(width - 1); ++u)
+        for (int u = 1; u < (int)(width - 6); ++u)
         {
             unsigned int idx = v * width + u; // linearized index
 
