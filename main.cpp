@@ -102,7 +102,7 @@ int main()
 
     // ==========================================================
     // MAIN LOOP
-    const int number_of_frames = 2;
+    const int number_of_frames = 10;
     for (int i = 0; i < number_of_frames; ++i)
     {
         sensor.processNextFrame();
@@ -224,7 +224,7 @@ int main()
         }
     }
 
-    /*
+    
     // extract the zero iso-surface using marching cubes
     SimpleMesh mesh;
     for (unsigned int x = 0; x < MC_vol.getDimX() - 1; x++)
@@ -247,20 +247,25 @@ int main()
         std::cout << "ERROR: unable to write output file!" << std::endl;
         return -1;
     }
-    */
+    
 
     // ==========================================================
 
-    // ==========================================================
-    // Check filter
-    //    sensor.processNextFrame();
-    //	float *depth_map = sensor.getDepth();			   // get the depth map
-    //	float *depth_map_filtered = sensor.getDepth(true); // get the filtered depth map
+    //==========================================================
+    // Depth width is 640?
+     int depthWidth = 640;
+     int depthHeight = 480;
+
     //
-    //	/* if you want to virtualize the depth map and fitered depth map ,please use following code */
-    //	 FreeImageU16F::SaveImageToFile(depth_map, "original.png", depthWidth, depthHeight, 1, true);
-    //	 FreeImageU16F::SaveImageToFile(depth_map_filtered, "filtered.png", depthWidth, depthHeight, 1, true);
-    // ==========================================================
+    //Check filter
+    sensor.processNextFrame();
+    float *depth_map = sensor.getDepth();			   // get the depth map
+    float *depth_map_filtered = sensor.getDepth(true); // get the filtered depth map
+    
+    /* if you want to virtualize the depth map and fitered depth map ,please use following code */
+    FreeImageU16F::SaveImageToFile(depth_map, "original.png", depthWidth, depthHeight, 1, true);
+    FreeImageU16F::SaveImageToFile(depth_map_filtered, "filtered.png", depthWidth, depthHeight, 1, true);
+    //==========================================================
 
     return 0;
 }
