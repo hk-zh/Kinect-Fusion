@@ -102,7 +102,7 @@ int main()
 
     // ==========================================================
     // MAIN LOOP
-    const int number_of_frames = 1;
+    const int number_of_frames = 2;
     for (int i = 0; i < number_of_frames; ++i)
     {
         sensor.processNextFrame();
@@ -115,7 +115,7 @@ int main()
             sample(vertex_prediction_v, vertex_prediction.get(), normal_prediction_v, normal_prediction.get(), num_pixels);
             sample(vertex_current_v, vertex_current.get(), normal_current_v, normal_current.get(), num_pixels);
 
-            //currentPos = optimizer->estimatePose(vertex_current_v, normal_current_v, vertex_prediction_v, normal_prediction_v, currentPos);
+            currentPos = optimizer->estimatePose(vertex_current_v, normal_current_v, vertex_prediction_v, normal_prediction_v, currentPos);
         }
 
         //update the weight and height of new tsdf
