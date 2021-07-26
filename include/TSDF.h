@@ -38,9 +38,9 @@ public:
         weight = std::make_unique<float[]>(volSz.x() * volSz.y() * volSz.z());
     }
 
-    void get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f *vertex_current, Vector3f *normal_current);
+    void get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f *vertex_current, Vector3f *normal_current, bool);
 
-    void update(VirtualSensor &sensor, const Matrix4f &camera2world);
+    void update(VirtualSensor &sensor, const Matrix4f &camera2world, bool);
 
     void raycast(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f *vertex_prediction, Vector3f *normal_prediction);
 

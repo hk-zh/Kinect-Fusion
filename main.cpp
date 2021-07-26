@@ -6,6 +6,7 @@
 #include "VirtualSensor.h"
 #include "SimpleMesh.h"
 #include "ICPOptimizer.h"
+#include "Frame.h"
 #include "PointCloud.h"
 #include "FreeImageHelper.h"
 #include "TSDF.h"
@@ -13,6 +14,8 @@
 
 #define USE_LINEAR_ICP 1
 #define SAMPEL_FREQUENCE 8
+
+//Fusion fusion;
 
 void sample(std::vector<Vector3f> a1, Vector3f *b1, std::vector<Vector3f> a2, Vector3f *b2, unsigned int num_pixels)
 {
@@ -56,12 +59,12 @@ int main()
     //volUnit = 0.0075f worked more fine than 0.0070
     //volUnit = 0.0080f core dumped 
     //volUnit = 0.0090f core dumped
-    //volUnit = 0.0090f + TSDF 95 changed volsZ from volSz.x() to volSz.x()-5 it worked fine than 0.0070 --> worked fine but coulur changed inerestingly
+    //volUnit = 0.0090f + TSDF 95 changed volsZ from volSz.x() to volSz.x()-5 it worked fine than 0.0070 --> worked fine but coulur changed interestingly
     //volUnit = 0.01f worked fine
     //volUnit = 0.02f not worked well
 
     Vector3i volSize(256, 256, 256);
-    float volUnit = 0.005f;
+    float volUnit = 0.0055f;
     float truncation = 0.012f;
     float init_depth = 1.0f;
 
@@ -102,14 +105,14 @@ int main()
 
     // ==========================================================
     // MAIN LOOP
-    const int number_of_frames = 2;
+    const int number_of_frames = 1;
     for (int i = 0; i < number_of_frames; ++i)
     {
         sensor.processNextFrame();
         
         //get the current values of vertex_current and normal_current to save as a file in the project folder
         // If there is no get current infor nothing changed
-        volume.get_current_info(sensor, currentPos, vertex_current.get(), normal_current.get());
+        volume.get_current_info(sensor, currentPos, vertex_current.get(), normal_current.get(), true);
         if (i != 0)
         {
             sample(vertex_prediction_v, vertex_prediction.get(), normal_prediction_v, normal_prediction.get(), num_pixels);
@@ -120,7 +123,53 @@ int main()
 
         //update the weight and height of new tsdf
         // If there is no update everythings are black
-        volume.update(sensor, currentPos);
+        volume.update(sensor, currentPos, true);
+
+        //////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        
+         /*
+        * Configuration Stuff
+        */
+       /*
+        Eigen::Vector3d volumeRange(5.0, 5.0, 5.0);
+        double voxelSize = volumeRange.x()/volSize.x();
+
+        const auto volumeOrigin = Eigen::Vector3d (-volumeRange.x()/2,-volumeRange.y()/2,0.5);
+
+        Config config (0.1,0.5,0.06, volumeOrigin, volSize.x(),volSize.y(),volSize.z(), voxelSize);
+
+        Eigen::Matrix3d depthIntrinsics = sensor.getDepthIntrinsics();
+        Eigen::Matrix3d colIntrinsics   = sensor.getColorIntrinsics();
+        Eigen::Matrix4d d2cExtrinsics   = sensor.getD2CExtrinsics();
+        const unsigned int depthWidth         = sensor.getDepthImageWidth();
+        const unsigned int depthHeight        = sensor.getDepthImageHeight();
+
+        const double* depthMap = &sensor.getDepth()[0];
+        BYTE* colors = &sensor.getColorRGBX()[0];
+        
+        //FRAME
+        std::shared_ptr<Frame> currentFrame = std::make_shared<Frame>(Frame(depthMap, colors, depthIntrinsics,colIntrinsics, d2cExtrinsics, depthWidth, depthHeight));
+
+        //FUSION
+        //fusion.reconstructSurface(currentFrame, volume, config)
+        */
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////
         //raycasting and save the result into vertex_prediction and normal_prediction
         //TODO: fix the raycast method there is some noisy?
         volume.raycast(sensor, currentPos, vertex_prediction.get(), normal_prediction.get());
@@ -130,7 +179,21 @@ int main()
 
         FreeImageB::SaveImageToFile(vertex_current.get(), "vertex_current.png", sensor.getColorImageWidth(), sensor.getColorImageHeight(), false);
         FreeImageB::SaveImageToFile(vertex_prediction.get(), "vertex_prediction.png", sensor.getColorImageWidth(), sensor.getColorImageHeight(), false);
-        
+
+
+
+
+        std::cout << "111111111111111111111!" << std::endl;
+        float *depth_map = sensor.getDepth();			   // get the depth map
+        float *depth_map_filtered = sensor.getDepth(true); // get the filtered depth map
+
+        /* if you want to virtualize the depth map and fitered depth map ,please use following code */
+        FreeImageU16F::SaveImageToFile(depth_map, "filter_test_original.png", sensor.getDepthImageWidth(), sensor.getDepthImageHeight(), 1, true);
+        FreeImageU16F::SaveImageToFile(depth_map_filtered, "filter_test_filtered.png", sensor.getDepthImageWidth(), sensor.getDepthImageHeight(), 1, true);
+        // ==========================================================
+        std::cout << "222222222222222222222!" << std::endl;
+
+
         // Test Raycast
         auto vertexValidate = [](const Vector3f &v)
         {
@@ -206,13 +269,14 @@ int main()
 
     // ==========================================================
     // Direct MC on the model
-    Volume MC_vol(Vector3d(-0.1, -0.1, -0.1), Vector3d(1.1, 1.1, 1.1), 200, 200, 200);
+    /*
+    Volume MC_vol(Vector3d(-0.1, -0.1, -0.1), Vector3d(1.1, 1.1, 1.1), 150, 150, 150);
 
-    for (unsigned int x = 0; x < MC_vol.getDimX(); x++)
+    for (unsigned int x = 0; x < MC_vol.getDimX()-5; x++)
     {
-        for (unsigned int y = 0; y < MC_vol.getDimY(); y++)
+        for (unsigned int y = 0; y < MC_vol.getDimY()-5; y++)
         {
-            for (unsigned int z = 0; z < MC_vol.getDimZ(); z++)
+            for (unsigned int z = 0; z < MC_vol.getDimZ()-5; z++)
             {
                 int xx = volume.volSz.x() * x / MC_vol.getDimX();
                 int yy = volume.volSz.y() * y / MC_vol.getDimY();
@@ -220,10 +284,18 @@ int main()
                 double val = volume.getDepth(xx, yy, zz);
                 bool valid = volume.getWeight(xx, yy, zz) > 0;
                 MC_vol.set(x, y, z, val, valid);
+
+
+                float *depth_map = sensor.getDepth();			   // get the depth map
+                float *depth_map_filtered = sensor.getDepth(true); // get the filtered depth map
+            
+            //	 if you want to virtualize the depth map and fitered depth map ,please use following code 
+                FreeImageU16F::SaveImageToFile(depth_map, "original.png", xx, yy, zz, true);
+                FreeImageU16F::SaveImageToFile(depth_map_filtered, "filtered.png", xx, yy, zz, true);
             }
         }
     }
-
+*/
     /*
     // extract the zero iso-surface using marching cubes
     SimpleMesh mesh;
@@ -247,8 +319,8 @@ int main()
         std::cout << "ERROR: unable to write output file!" << std::endl;
         return -1;
     }
-    */
-
+    
+*/
     // ==========================================================
 
     // ==========================================================

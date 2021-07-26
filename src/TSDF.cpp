@@ -2,9 +2,9 @@
 #include <exception>
 #include <iostream>
 
-void TSDF::get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f *vertex_current, Vector3f *normal_current)
+void TSDF::get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world, Vector3f *vertex_current, Vector3f *normal_current, bool filter)
 {
-    float *depthMap = sensor.getDepth();
+    float *depthMap = sensor.getDepth(filter);
     const Matrix3f &depthIntrinsics = sensor.getDepthIntrinsics();
     const Matrix4f &depthExtrinsics = camera2world;
     const unsigned height = sensor.getDepthImageHeight();
@@ -68,7 +68,7 @@ void TSDF::get_current_info(VirtualSensor &sensor, const Matrix4f &camera2world,
     }
 }
 
-void TSDF::update(VirtualSensor &sensor, const Matrix4f &camera2world)
+void TSDF::update(VirtualSensor &sensor, const Matrix4f &camera2world, bool filter = false)
 {
     Matrix4f world2camera = camera2world.inverse();
     Matrix3f rotation = world2camera.block<3, 3>(0, 0);
@@ -113,7 +113,7 @@ void TSDF::update(VirtualSensor &sensor, const Matrix4f &camera2world)
                     continue;
                 }
 
-                float raw_depth = sensor.getDepth(pos_in_pixel.x(), pos_in_pixel.y(), false);
+                float raw_depth = sensor.getDepth(pos_in_pixel.x(), pos_in_pixel.y(), filter);
                 if (raw_depth == MINF)
                 {
                     continue;

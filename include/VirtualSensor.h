@@ -14,6 +14,7 @@ typedef unsigned char BYTE;
 class VirtualSensor
 {
 public:
+	Eigen::Matrix4d getD2CExtrinsics(){return m_d2cExtrinsics;}
 	VirtualSensor() : m_currentIdx(-1), m_increment(1) {}
 
 	~VirtualSensor()
@@ -117,7 +118,7 @@ public:
 		}
 		m_currentTrajectory = m_trajectory[idx];
 
-		//filter_depth_map();
+		filter_depth_map();
 
 		return true;
 	}
@@ -269,6 +270,7 @@ private:
 	{
 		auto n_sigma = [](float x, float sigma)
 		{
+			//exp(−t^2 * σ^−2 )
 			return exp(-pow(x, 2) * pow(sigma, -2));
 		};
 
@@ -317,10 +319,36 @@ private:
 					}
 				}
 
-				*depth_locator(m_depthFrame_filtered, ux, uy) = sum_values / sum_weights;
+				*depth_locator(m_depthFrame_filtered, ux, uy) = sum_values / (sum_weights*(1.5) );
 			}
 		}
 	}
+
+
+	protected:
+
+    void InitDepth2ColorExtrinsics(float *rotation, float *translation){
+        for (size_t i = 0; i < 9; ++i){
+            m_d2cExtrinsics(int(i/3), i%3) = rotation[i];
+        }
+        for (size_t i = 0; i < 3; ++i){
+            m_d2cExtrinsics(i, 3) = translation[i];
+        }
+        m_d2cExtrinsics(3,3) = 1;
+
+        m_rotation.reserve(9);
+        m_translation.reserve(3);
+
+        for (size_t i = 0; i < 9; ++i)
+            m_rotation.push_back(rotation[i]);
+        for (size_t i = 0; i < 3; ++i)
+            m_translation.push_back(translation[i]);
+    }
+
+    std::vector<double> m_rotation;
+    std::vector<double> m_translation;
+
+    Eigen::Matrix4d m_d2cExtrinsics;
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 	// parameter for the filter
