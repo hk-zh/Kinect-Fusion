@@ -55,8 +55,8 @@ public:
 		// Back-project the pixel depths into the camera space.
 		std::vector<Vector3f> pointsTmp(width * height);
 
-// For every pixel row.
-#pragma omp parallel for
+		// For every pixel row.
+		#pragma omp parallel for
 		for (int v = 0; v < (int)height; ++v)
 		{
 			// For every pixel in a row.
@@ -79,7 +79,7 @@ public:
 		// We need to compute derivatives and then the normalized normal vector (for valid pixels).
 		std::vector<Vector3f> normalsTmp(width * height);
 
-#pragma omp parallel for
+		#pragma omp parallel for
 		for (int v = 1; v < (int)(height - 1); ++v)
 		{
 			for (int u = 1; u < (int)(width - 1); ++u)
@@ -95,12 +95,21 @@ public:
 				}
 
 				// TODO: Compute the normals using central differences.
+				
 				int idx_up = (v - 1) * width + u;
 				int idx_down = (v + 1) * width + u;
 				int idx_left = v * width + u - 1;
 				int idx_right = v * width + u + 1;
 				normalsTmp[idx] = (pointsTmp[idx_right] - pointsTmp[idx_left]).cross(pointsTmp[idx_up] - pointsTmp[idx_down]); // Needs to be replaced.
 				normalsTmp[idx].normalize();
+				/*
+
+				const Vector3f horz = 0.5f * (pointsTmp[idx + 1] - pointsTmp[idx - 1]);
+				const Vector3f vert = 0.5f * (pointsTmp[idx + width] - pointsTmp[idx - width]);
+				const Vector3f n = vert.cross(horz);
+
+				normalsTmp[idx] = n; // Vector3f(1, 1, 1); // Needs to be replaced.
+				normalsTmp[idx].normalize();*/
 			}
 		}
 

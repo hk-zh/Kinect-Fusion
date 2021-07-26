@@ -5,6 +5,7 @@
 
 #include <string>
 #include <algorithm>
+#include <Eigen.h>
 
 #include <FreeImage.h>
 
@@ -55,7 +56,8 @@ struct FreeImageB
 	bool LoadImageFromFile(const std::string &filename, unsigned int width = 0, unsigned int height = 0);
 
 	bool SaveImageToFile(const std::string &filename, bool flipY = false);
-
+	static bool SaveImageToFile(float *data, const std::string &filename, unsigned int w, unsigned int h, unsigned int nChannels, bool flipY = false);
+	static bool SaveImageToFile(Vector3f *data, const std::string &filename, unsigned int w, unsigned int h, bool flipY = false);
 	unsigned int w;
 	unsigned int h;
 	unsigned int nChannels;

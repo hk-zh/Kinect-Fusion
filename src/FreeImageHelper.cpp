@@ -349,6 +349,76 @@ bool FreeImageB::SaveImageToFile(const std::string &filename, bool flipY)
 	return r;
 }
 
+bool FreeImageB::SaveImageToFile(float *data, const std::string &filename, unsigned int w, unsigned int h, unsigned int nChannels, bool flipY)
+{
+	FREE_IMAGE_FORMAT fif = FIF_PNG;
+	FIBITMAP *dib = FreeImage_Allocate(w, h, 24);
+	RGBQUAD color;
+	for (unsigned int j = 0; j < h; j++)
+	{
+		for (unsigned int i = 0; i < w; i++)
+		{
+			unsigned char col[3] = {0, 0, 0};
+
+			for (unsigned int c = 0; c < nChannels && c < 3; ++c)
+			{
+				//col[c] = std::min(std::max(0, (int)(255.0f*data[nChannels * (w*j + i) + c])), 255);
+				col[c] = data[nChannels * (w * j + i) + c];
+			}
+
+			color.rgbRed = col[0];
+			color.rgbGreen = col[1];
+			color.rgbBlue = col[2];
+			if (!flipY)
+				FreeImage_SetPixelColor(dib, i, h - 1 - j, &color);
+			else
+				FreeImage_SetPixelColor(dib, i, j, &color);
+		}
+	}
+	bool r = FreeImage_Save(fif, dib, filename.c_str(), 0) == 1;
+	FreeImage_Unload(dib);
+	return r;
+}
+bool FreeImageB::SaveImageToFile(Vector3f *data, const std::string &filename, unsigned int w, unsigned int h, bool flipY)
+{
+	FREE_IMAGE_FORMAT fif = FIF_PNG;
+	FIBITMAP *dib = FreeImage_Allocate(w, h, 24);
+	RGBQUAD color;
+	for (unsigned int j = 0; j < h; j++)
+	{
+		for (unsigned int i = 0; i < w; i++)
+		{
+			unsigned char col[3] = {0, 0, 0};
+
+			for (unsigned int c = 0; c < 3 && c < 3; ++c)
+			{
+				//col[c] = std::min(std::max(0, (int)(255.0f*data[nChannels * (w*j + i) + c])), 255);
+				col[c] = std::max(0, (int)(255.0 * data[(w * j + i)][c]));
+			}
+
+			color.rgbRed = col[0];
+			color.rgbGreen = col[1];
+			color.rgbBlue = col[2];
+			if (!flipY)
+				FreeImage_SetPixelColor(dib, i, h - 1 - j, &color);
+			else
+				FreeImage_SetPixelColor(dib, i, j, &color);
+		}
+	}
+	bool r = FreeImage_Save(fif, dib, filename.c_str(), 0) == 1;
+	FreeImage_Unload(dib);
+	if (r)
+	{
+		std::cout << "successfully saved image!" << std::endl;
+	}
+	else
+	{
+		std::cout << "failed to save image!" << std::endl;
+	}
+
+	return r;
+}
+
 FreeImageU16F::FreeImageU16F() : w(0), h(0), nChannels(0), data(nullptr)
 {
 }
